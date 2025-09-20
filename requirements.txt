@@ -1,5 +1,6 @@
+streamlit
 opencv-python
 ultralytics
-mediapipe
-streamlit
+mediapipe==0.10.21
 numpy
+Pillow
