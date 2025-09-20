@@ -1,31 +1,31 @@
+import streamlit as st
 import cv2
+import numpy as np
 from ultralytics import YOLO
 import mediapipe as mp
 
-# Load YOLOv8 model (pretrained on COCO dataset with 80 objects)
+st.title("Real-Time Object, Hand & Face Detection (Web Version)")
+
+# Load YOLO model
 yolo_model = YOLO("yolov8n.pt")
 
-# Initialize Mediapipe for hands and face mesh
+# Mediapipe init
 mp_hands = mp.solutions.hands
 mp_face = mp.solutions.face_mesh
 mp_drawing = mp.solutions.drawing_utils
-
 hands = mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5)
 face_mesh = mp_face.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence=0.5)
 
-# Open webcam
-cap = cv2.VideoCapture(0)
+# Upload image
+uploaded_file = st.file_uploader("Upload an Image", type=["jpg","jpeg","png"])
 
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        break
-    
-    # Flip frame for natural feel
+if uploaded_file:
+    file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
+    frame = cv2.imdecode(file_bytes, 1)
     frame = cv2.flip(frame, 1)
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-    # --- YOLO OBJECT DETECTION ---
+    # YOLO Detection
     results = yolo_model(frame, stream=True)
     for r in results:
         for box in r.boxes:
@@ -36,7 +36,7 @@ while True:
             cv2.putText(frame, label, (x1, y1 - 5),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
-    # --- HAND DETECTION (Mediapipe) ---
+    # Hand detection
     hand_results = hands.process(rgb_frame)
     if hand_results.multi_hand_landmarks:
         for landmarks in hand_results.multi_hand_landmarks:
@@ -46,7 +46,7 @@ while True:
                 mp_drawing.DrawingSpec(color=(0, 255, 255), thickness=2)
             )
 
-    # --- FACE MESH DETECTION (Mediapipe) ---
+    # Face mesh
     face_results = face_mesh.process(rgb_frame)
     if face_results.multi_face_landmarks:
         for landmarks in face_results.multi_face_landmarks:
@@ -56,12 +56,4 @@ while True:
                 mp_drawing.DrawingSpec(color=(0, 255, 0), thickness=1)
             )
 
-    # Show output
-    cv2.imshow("Real-Time Object, Hand & Face Detection", frame)
-
-    # Exit on pressing 'q'
-    if cv2.waitKey(1) & 0xFF == ord("q"):
-        break
-
-cap.release()
-cv2.destroyAllWindows()
+    st.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), channels="RGB")
