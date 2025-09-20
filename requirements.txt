@@ -1,5 +1,5 @@
-ultralytics>=8.0.0
-mediapipe>=0.10.0
-opencv-python>=4.7.0
-numpy>=1.23.0
-streamlit>=1.25.0   # if you plan to run it on Streamlit
+opencv-python
+ultralytics
+mediapipe
+streamlit
+numpy
