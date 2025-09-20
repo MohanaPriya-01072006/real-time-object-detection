@@ -1,7 +1,6 @@
-streamlit==1.24.1
-opencv-python==4.12.0
-ultralytics==8.3.202
+streamlit
+opencv-python
+ultralytics
 mediapipe==0.10.21
-numpy==1.26.0
-Pillow==10.1.0
-
+numpy
+Pillow
