@@ -1,31 +1,33 @@
 import streamlit as st
 import cv2
-import numpy as np
 from ultralytics import YOLO
 import mediapipe as mp
+import numpy as np
 
-st.title("Real-Time Object, Hand & Face Detection (Web Version)")
+st.title("Real-Time Object, Hand & Face Detection")
 
-# Load YOLO model
+# Load YOLOv8 model
 yolo_model = YOLO("yolov8n.pt")
 
-# Mediapipe init
+# Mediapipe initialization
 mp_hands = mp.solutions.hands
 mp_face = mp.solutions.face_mesh
 mp_drawing = mp.solutions.drawing_utils
 hands = mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5)
 face_mesh = mp_face.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence=0.5)
 
-# Upload image
-uploaded_file = st.file_uploader("Upload an Image", type=["jpg","jpeg","png"])
+# Webcam input
+FRAME_WINDOW = st.image([])  # Streamlit image container
+cap = cv2.VideoCapture(0)
 
-if uploaded_file:
-    file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
-    frame = cv2.imdecode(file_bytes, 1)
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
     frame = cv2.flip(frame, 1)
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-    # YOLO Detection
+    # YOLO Object detection
     results = yolo_model(frame, stream=True)
     for r in results:
         for box in r.boxes:
@@ -46,7 +48,7 @@ if uploaded_file:
                 mp_drawing.DrawingSpec(color=(0, 255, 255), thickness=2)
             )
 
-    # Face mesh
+    # Face mesh detection
     face_results = face_mesh.process(rgb_frame)
     if face_results.multi_face_landmarks:
         for landmarks in face_results.multi_face_landmarks:
@@ -56,4 +58,5 @@ if uploaded_file:
                 mp_drawing.DrawingSpec(color=(0, 255, 0), thickness=1)
             )
 
-    st.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), channels="RGB")
+    # Display in Streamlit
+    FRAME_WINDOW.image(frame, channels="BGR")
